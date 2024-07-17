@@ -4,10 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Project</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .container {
+            padding: 2rem;
+        }
+        .diagram {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .diagram img {
+            max-width: 100%;
+            height: auto;
+        }
+        .project-description {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Project</h1>
-    <p>This is a simple GitHub Pages site for my project.</p>
+    <header>
+        <h1>My Project</h1>
+    </header>
+    <div class="container">
+        <section class="diagram">
+            <h2>Architecture Diagram</h2>
+            <img src="path/to/your/architecture-diagram.png" alt="Architecture Diagram">
+        </section>
+        <section class="project-description">
+            <h2>Project Description</h2>
+            <p><strong>Repositories on GitHub 📁</strong></p>
+            <p><strong>Webapp:</strong> Contains the web application (REST API) code. GitHub Actions are used for Continuous Deployment (CD):</p>
+            <ul>
+                <li>When code is merged, a machine image of the webapp is built on a VM spun up on Google Cloud, using Packer.</li>
+            </ul>
+            <p><strong>Terraform-IAC:</strong> Contains Infrastructure as Code (IAC) for setting up and modifying infrastructure.</p>
+            <p><strong>Serverless:</strong> Contains JavaScript function code deployed on Google Cloud Function to send verification emails when a user signs up.</p>
+            <p><strong>Infrastructure Components</strong></p>
+            <ul>
+                <li>Domain name purchased from Namecheap.</li>
+            </ul>
+            <p><strong>Event-Driven Components</strong></p>
+            <ul>
+                <li>Pub/Sub: When the /v1/user (create user) endpoint is hit, a message is posted to a Pub/Sub queue. This message triggers a Google Cloud Function:</li>
+            </ul>
+        </section>
+    </div>
 </body>
 </html>
