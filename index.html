@@ -3,29 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Project</title>
+    <title>Spotify ETL Data Pipeline</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            background-color: #f4f4f4;
         }
         header {
             background-color: #4CAF50;
             color: white;
-            padding: 1rem;
             text-align: center;
+            padding: 1rem;
         }
         .container {
             padding: 2rem;
         }
-        .diagram {
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            padding-left: 1.5rem;
+        }
+        .architecture {
             text-align: center;
             margin: 2rem 0;
         }
-        .diagram img {
+        .architecture img {
             max-width: 100%;
             height: auto;
         }
@@ -34,6 +39,7 @@
             padding: 1rem;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
         }
         @media (max-width: 600px) {
             .container {
@@ -44,29 +50,82 @@
 </head>
 <body>
     <header>
-        <h1>My Project</h1>
+        <h1>Spotify ETL Data Pipeline</h1>
     </header>
     <div class="container">
-        <section class="diagram">
-            <h2>Architecture Diagram</h2>
-            <img src="path/to/your/architecture-diagram.png" alt="Architecture Diagram">
-        </section>
         <section class="project-description">
             <h2>Project Description</h2>
-            <p><strong>Repositories on GitHub 📁</strong></p>
-            <p><strong>Webapp:</strong> Contains the web application (REST API) code. GitHub Actions are used for Continuous Deployment (CD):</p>
+            <p>This project demonstrates a Spotify ETL (Extract, Transform, Load) data pipeline utilizing AWS and Snowflake cloud providers.</p>
+            <p><strong>Tech Stack:</strong></p>
             <ul>
-                <li>When code is merged, a machine image of the webapp is built on a VM spun up on Google Cloud, using Packer.</li>
+                <li>AWS IAM</li>
+                <li>AWS Lambda</li>
+                <li>AWS Glue</li>
+                <li>AWS S3</li>
+                <li>Snowflake</li>
+                <li>Apache Spark</li>
+                <li>AWS Triggers and Events</li>
             </ul>
-            <p><strong>Terraform-IAC:</strong> Contains Infrastructure as Code (IAC) for setting up and modifying infrastructure.</p>
-            <p><strong>Serverless:</strong> Contains JavaScript function code deployed on Google Cloud Function to send verification emails when a user signs up.</p>
-            <p><strong>Infrastructure Components</strong></p>
+        </section>
+        <section class="architecture">
+            <h2>Architecture</h2>
+            <img src="spotify_data_pipeline_arch.jpg" alt="Spotify Data Pipeline Architecture">
+        </section>
+        <section class="project-description">
+            <h2>Flow of Execution (No manual Intervention Required)</h2>
+            <h3>Step 1: (Extract)</h3>
             <ul>
-                <li>Domain name purchased from Namecheap.</li>
+                <li>Lambda function extracts data from "Top most popular songs" using the Spotify API.</li>
+                <li>Extraction is triggered at regular intervals.</li>
+                <li>Raw data is stored in the S3 bucket at <code>raw_data/unprocessed</code>.</li>
+                <li>AWS Glue job is triggered for the transformation.</li>
+                <li><a href="extract/extract_spotify_lambda.py">Extract Code Link</a></li>
             </ul>
-            <p><strong>Event-Driven Components</strong></p>
+            <h3>Step 2: (Transform)</h3>
             <ul>
-                <li>Pub/Sub: When the /v1/user (create user) endpoint is hit, a message is posted to a Pub/Sub queue. This message triggers a Google Cloud Function:</li>
+                <li>A Spark session with 5 workers is created (default configuration).</li>
+                <li>Raw data is loaded from the S3 bucket <code>raw_data/unprocessed</code>.</li>
+                <li>Parallel processing of data:
+                    <ul>
+                        <li>Process Album data and store in S3 at <code>processed_data/album</code>.</li>
+                        <li>Process Artist data and store in S3 at <code>processed_data/artist</code>.</li>
+                        <li>Process Songs data and store in S3 at <code>processed_data/songs</code>.</li>
+                    </ul>
+                </li>
+                <li>Move processed data to <code>raw_data/processed</code> bucket.</li>
+                <li>Delete processed data from <code>raw_data/unprocessed</code> bucket.</li>
+                <li><a href="transform/tranform_on_spark.py">Transform Code Link</a></li>
+            </ul>
+            <h3>Step 3: (Load)</h3>
+            <ul>
+                <li>Already a snow pipe was created for three buckets (album, artist, songs) to receive notifications.</li>
+                <li>When new data arrives in the S3 bucket, the pipe gets triggered and inserts data to respective tables.</li>
+                <li><a href="load/spotify_load.sql">Load Code Link</a></li>
+            </ul>
+            <h3>Required IAM Roles:</h3>
+            <h4>1. Connecting Snowflake and S3:</h4>
+            <ul>
+                <li>Create a storage integration stage in Snowflake with an AWS Assume Role ARN.</li>
+                <li>Create an Assume Role in AWS with Snowflake’s AWS ARN and External ID.</li>
+            </ul>
+            <h4>2. Triggering with Snow Pipe:</h4>
+            <ul>
+                <li>Create event notifications for S3 buckets.</li>
+                <li>Add the pipe’s SQS channel ID during event notification creation.</li>
+                <li>This step is required for each bucket: songs, artist, and album.</li>
+            </ul>
+            <h4>3. Other IAM Roles:</h4>
+            <ul>
+                <li><strong>Lambda Service Role:</strong>
+                    <ul>
+                        <li>Policies: AmazonS3FullAccess, AWSGlueServiceRole</li>
+                    </ul>
+                </li>
+                <li><strong>Glue Service Role:</strong>
+                    <ul>
+                        <li>Policies: AmazonS3FullAccess, AWSGlueServiceNotebookRole, AWSGlueServiceRole, AWSLambda_FullAccess, IAMFullAccess</li>
+                    </ul>
+                </li>
             </ul>
         </section>
     </div>
